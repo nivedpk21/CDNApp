@@ -13,10 +13,11 @@ app.use("/live", (req, res) => {
   res.send("hello world!");
 });
 //nice
+app.set('trust proxy', true);
 
 app.get("/get-ip", async (req, res) => {
   try {
-    const userIp = req.ip;
+    const userIp = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     let existingIp = await ipModel.findOne({ ip: userIp });
 
     if (!existingIp) {
