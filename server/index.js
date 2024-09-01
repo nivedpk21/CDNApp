@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/live", (req, res) => {
   res.send("hello world!");
 });
+//nice
 
 app.get("/get-ip", async (req, res) => {
   try {
