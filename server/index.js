@@ -4,7 +4,6 @@ const bodyparser = require("body-parser");
 const cors = require("cors");
 const ipModel = require("./src/models/ipModel");
 const urlModel = require("./src/models/urlModel");
-const PORT = 4000;
 
 app.use(bodyparser.json());
 app.use(cors());
@@ -107,6 +106,6 @@ app.post("/add-url", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(4000, () => {
   console.log("server started");
 });
