@@ -16,7 +16,7 @@ app.use("/live", (req, res) => {
 
 app.get("/get-ip", async (req, res) => {
   try {
-    const userIp = "1240"; //req.ip;
+    const userIp = req.ip;
     let existingIp = await ipModel.findOne({ ip: userIp });
 
     if (!existingIp) {
