@@ -33,10 +33,7 @@ app.get("/get-ip", async (req, res) => {
       if (saveData) {
         const responseUrl = await urlModel.findOne({ order: "1" });
         if (responseUrl) {
-          return res.status(200).json({
-            data: responseUrl.url,
-            message: "url fetched successfully",
-          });
+          return res.redirect(returnUrl.url);
         } else {
           return res.status(400).json({ message: "unable fetch url" });
         }
