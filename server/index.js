@@ -62,10 +62,13 @@ app.get("/get-ip", async (req, res) => {
       await existingIp.save();
       const returnUrl = await urlModel.findOne({ order: nextOrder });
       if (returnUrl) {
-        return res.redirect(returnUrl.url);
+        // return res.redirect(returnUrl.url);
+        return res.status(200).json({
+          data: result,
+        });
       } else {
         return res.status(400).json({
-          message: "unable to fetch url",
+          data: "unable to fetch url",
         });
       }
     }
