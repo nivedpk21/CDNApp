@@ -10,67 +10,67 @@ app.use(bodyparser.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
+// check if server is live
 app.use("/live", (req, res) => {
   res.send("hello world!");
 });
 
+// get url
 app.get("/get-ip", async (req, res) => {
+  // get userIp
   const requestIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const userIp = requestIP ? requestIP.split(",")[0].trim() : req.connection.remoteAddress;
-  console.log(userIp, "userIP");
 
   try {
+    // check if proxy or not
     const check = new proxyCheck({ api_key: "989e88-762533-6f2h93-ny9541" });
     const result = await check.check(userIp);
-    console.log(result, "result");
-
-    let existingIp = await ipModel.findOne({ ip: userIp });
-    if (!existingIp) {
-      console.log("freship");
-      // fresh ip
-      const newData = {
-        ip: userIp,
-        count: "1",
-      };
-      const saveData = await ipModel(newData).save();
-      if (saveData) {
-        const responseUrl = await urlModel.findOne({ order: "1" });
-        if (responseUrl) {
-          // return res.redirect(responseUrl.url);
-          return res.status(200).json({
-            data: result,
-          });
+    if (result.status === "ok") {
+      let existingIp = await ipModel.findOne({ ip: userIp });
+      if (!existingIp) {
+        // fresh ip
+        const newData = {
+          ip: userIp,
+          count: "1",
+        };
+        const saveData = await ipModel(newData).save();
+        if (saveData) {
+          const responseUrl = await urlModel.findOne({ order: "1" });
+          if (responseUrl) {
+            return res.redirect(responseUrl.url);
+          } else {
+            return res.status(400).json({ message: "unable fetch url" });
+          }
         } else {
-          return res.status(400).json({ message: "unable fetch url" });
+          return res.status(400).json({ message: "unable to save ip" });
         }
       } else {
-        return res.status(400).json({ message: "unable to save ip" });
+        // already existing ip
+        let nextOrder;
+        if (existingIp.count === "1") {
+          existingIp.count = "2";
+          nextOrder = 2;
+        } else if (existingIp.count === "2") {
+          existingIp.count = "3";
+          nextOrder = 3;
+        } else {
+          return res.status(400).json({ message: "reached maximum limit"});
+        }
+
+        await existingIp.save();
+        const returnUrl = await urlModel.findOne({ order: nextOrder });
+        if (returnUrl) {
+          return res.redirect(returnUrl.url);
+        } else {
+          return res.status(400).json({
+            data: "unable to fetch url",
+          });
+        }
       }
     } else {
-      // already existing ip
-      let nextOrder;
-      if (existingIp.count === "1") {
-        existingIp.count = "2";
-        nextOrder = 2;
-      } else if (existingIp.count === "2") {
-        existingIp.count = "3";
-        nextOrder = 3;
-      } else {
-        return res.status(400).json({ message: "reached maximum limit", data: result });
-      }
-
-      await existingIp.save();
-      const returnUrl = await urlModel.findOne({ order: nextOrder });
-      if (returnUrl) {
-        // return res.redirect(returnUrl.url);
-        return res.status(200).json({
-          data: result,
-        });
-      } else {
-        return res.status(400).json({
-          data: "unable to fetch url",
-        });
-      }
+      return res.status(400).json({
+        message: "proxy detected",
+      });
     }
   } catch (error) {
     return res.status(500).json({ message: "internal server error" });
