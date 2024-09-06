@@ -17,10 +17,7 @@ app.use("/live", (req, res) => {
 app.get("/get-ip", async (req, res) => {
   const requestIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const userIp = requestIP ? requestIP.split(",")[0].trim() : req.connection.remoteAddress;
-  console.log(requestIP, "req IP");
   console.log(userIp, "userIP");
-  testIP = "157.46.1.250";
-  console.log(testIP, "tst");
 
   try {
     const check = new proxyCheck({ api_key: "989e88-762533-6f2h93-ny9541" });
@@ -59,7 +56,7 @@ app.get("/get-ip", async (req, res) => {
         existingIp.count = "3";
         nextOrder = 3;
       } else {
-        return res.status(400).json({ message: "reached maximum limit" });
+        return res.status(400).json({ message: "reached maximum limit", data: result });
       }
 
       await existingIp.save();
