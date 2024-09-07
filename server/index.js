@@ -23,7 +23,7 @@ app.get("/get-ip", async (req, res) => {
 
   try {
     // check if proxy or not
-    const ipdata = new IPData("APIKEY");
+    const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
     const result = ipdata.lookup(userIp);
     if (result) {
       return res.status(200).json({
