@@ -9,6 +9,7 @@ const IPData = require("ipdata").default;
 app.use(bodyparser.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.set("trust proxt", true);
 
 // check if server is live
 app.use("/live", (req, res) => {
@@ -18,14 +19,21 @@ app.use("/live", (req, res) => {
 // get url
 app.get("/get-ip", async (req, res) => {
   // get userIp
-  const requestIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  const userIp = requestIP ? requestIP.split(",")[0].trim() : req.connection.remoteAddress;
-  console.log(userIp, "userip");
+  let userIP;
+  if (req.headers["x-forwarded-for"]) {
+    userIP = req.headers["x-forwarded-for"].split(",")[0].trim();
+  } else {
+    userIP = req.socket.remoteAddress || req.connection.remoteAddress;
+  }
+
+  if (userIP === "::1") {
+    userIP = "127.0.0.1";
+  }
 
   try {
     // check if proxy or not
     const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
-    const result = await ipdata.lookup(userIp);
+    const result = await ipdata.lookup(userIP);
     if (result) {
       return res.status(200).json({
         data: result,
