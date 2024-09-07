@@ -4,7 +4,7 @@ const bodyparser = require("body-parser");
 const cors = require("cors");
 const ipModel = require("./src/models/ipModel");
 const urlModel = require("./src/models/urlModel");
-const IPData = require("ipdata");
+const IPData = require("ipdata").default;
 
 app.use(bodyparser.json());
 app.use(cors());
@@ -20,16 +20,18 @@ app.get("/get-ip", async (req, res) => {
   // get userIp
   const requestIP = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
   const userIp = requestIP ? requestIP.split(",")[0].trim() : req.connection.remoteAddress;
+  console.log(userIp, "userip");
 
   try {
     // check if proxy or not
     const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
-    const result = ipdata.lookup(userIp);
+    const result = await ipdata.lookup(userIp);
     if (result) {
       return res.status(200).json({
         data: result,
       });
     }
+
     // if (result[ip].proxy === "ok") {
     //   let existingIp = await ipModel.findOne({ ip: userIp });
     //   if (!existingIp) {
