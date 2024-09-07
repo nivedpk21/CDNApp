@@ -4,7 +4,7 @@ const bodyparser = require("body-parser");
 const cors = require("cors");
 const ipModel = require("./src/models/ipModel");
 const urlModel = require("./src/models/urlModel");
-const proxyCheck = require("proxycheck-node.js");
+const IPData = require("ipdata");
 
 app.use(bodyparser.json());
 app.use(cors());
@@ -23,8 +23,8 @@ app.get("/get-ip", async (req, res) => {
 
   try {
     // check if proxy or not
-    const check = new proxyCheck({ api_key: "989e88-762533-6f2h93-ny9541" });
-    const result = await check.check(userIp);
+    const ipdata = new IPData("APIKEY");
+    const result = ipdata.lookup(userIp);
     if (result) {
       return res.status(200).json({
         data: result,
