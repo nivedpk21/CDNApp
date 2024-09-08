@@ -9,7 +9,7 @@ const IPData = require("ipdata").default;
 app.use(bodyparser.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-app.set("trust proxt", true);
+app.set("trust proxy", true);
 
 // check if server is live
 app.use("/live", (req, res) => {
