@@ -35,7 +35,7 @@ app.get("/get-ip", async (req, res) => {
   try {
     // check if proxy or not
     const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
-    const result = await ipdata.lookup("185.16.38.230");
+    const result = await ipdata.lookup(userIP);
 
     if (result.threat.is_proxy !== true) {
       let existingIp = await ipModel.findOne({ ip: userIP });
