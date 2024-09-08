@@ -18,6 +18,8 @@ app.use("/live", (req, res) => {
 
 // get url
 app.get("/get-ip", async (req, res) => {
+  console.log(req.ip, "reqip");
+
   // get userIp
   let userIP;
   if (req.headers["x-forwarded-for"]) {
@@ -33,60 +35,55 @@ app.get("/get-ip", async (req, res) => {
   try {
     // check if proxy or not
     const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
-    const result = await ipdata.lookup(userIP);
-    if (result) {
-      return res.status(200).json({
-        data: result,
+    const result = await ipdata.lookup("185.16.38.230");
+
+    if (result.threat.is_proxy !== true) {
+      let existingIp = await ipModel.findOne({ ip: userIP });
+      if (!existingIp) {
+        // fresh ip
+        const newData = {
+          ip: userIP,
+          count: "1",
+        };
+        const saveData = await ipModel(newData).save();
+        if (saveData) {
+          const responseUrl = await urlModel.findOne({ order: "1" });
+          if (responseUrl) {
+            return res.redirect(responseUrl.url);
+          } else {
+            return res.status(400).json({ message: "unable fetch url" });
+          }
+        } else {
+          return res.status(400).json({ message: "unable to save ip" });
+        }
+      } else {
+        // already existing ip
+        let nextOrder;
+        if (existingIp.count === "1") {
+          existingIp.count = "2";
+          nextOrder = 2;
+        } else if (existingIp.count === "2") {
+          existingIp.count = "3";
+          nextOrder = 3;
+        } else {
+          return res.status(400).json({ message: "reached maximum limit" });
+        }
+
+        await existingIp.save();
+        const returnUrl = await urlModel.findOne({ order: nextOrder });
+        if (returnUrl) {
+          return res.redirect(returnUrl.url);
+        } else {
+          return res.status(400).json({
+            data: "unable to fetch url",
+          });
+        }
+      }
+    } else {
+      return res.status(400).json({
+        message: "proxy detected",
       });
     }
-
-    // if (result[ip].proxy === "ok") {
-    //   let existingIp = await ipModel.findOne({ ip: userIp });
-    //   if (!existingIp) {
-    //     // fresh ip
-    //     const newData = {
-    //       ip: userIp,
-    //       count: "1",
-    //     };
-    //     const saveData = await ipModel(newData).save();
-    //     if (saveData) {
-    //       const responseUrl = await urlModel.findOne({ order: "1" });
-    //       if (responseUrl) {
-    //         return res.redirect(responseUrl.url);
-    //       } else {
-    //         return res.status(400).json({ message: "unable fetch url" });
-    //       }
-    //     } else {
-    //       return res.status(400).json({ message: "unable to save ip" });
-    //     }
-    //   } else {
-    //     // already existing ip
-    //     let nextOrder;
-    //     if (existingIp.count === "1") {
-    //       existingIp.count = "2";
-    //       nextOrder = 2;
-    //     } else if (existingIp.count === "2") {
-    //       existingIp.count = "3";
-    //       nextOrder = 3;
-    //     } else {
-    //       return res.status(400).json({ message: "reached maximum limit" });
-    //     }
-
-    //     await existingIp.save();
-    //     const returnUrl = await urlModel.findOne({ order: nextOrder });
-    //     if (returnUrl) {
-    //       return res.redirect(returnUrl.url);
-    //     } else {
-    //       return res.status(400).json({
-    //         data: "unable to fetch url",
-    //       });
-    //     }
-    //   }
-    // } else {
-    //   return res.status(400).json({
-    //     message: "proxy detected",
-    //   });
-    // }
   } catch (error) {
     return res.status(500).json({ message: "internal server error" });
   }

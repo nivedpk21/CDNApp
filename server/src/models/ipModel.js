@@ -10,6 +10,7 @@ const schema = mongoose.Schema;
 const ipSchema = new schema({
   ip: { type: String },
   count: { type: String },
+  createdAt: { type: Date, default: Date.now, expires: "24h" },
 });
 const ipModel = mongoose.model("ip_tb", ipSchema);
 module.exports = ipModel;
