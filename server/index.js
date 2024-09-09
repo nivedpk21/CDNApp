@@ -18,8 +18,6 @@ app.use("/live", (req, res) => {
 
 // get url
 app.get("/get-ip", async (req, res) => {
-  console.log(req.ip, "reqip");
-
   // get userIp
   let userIP;
   if (req.headers["x-forwarded-for"]) {
@@ -35,7 +33,16 @@ app.get("/get-ip", async (req, res) => {
   try {
     // check if proxy or not
     const ipdata = new IPData("3c605f586018d3be82ad81cfbc00f46e5c2d2452585658434b064997");
-    const result = await ipdata.lookup(userIP);
+    let result;
+    try {
+      result = await ipdata.lookup(userIP);
+    } catch (error) {
+      return res.status(500).json({ message: "error fetching ip data from api" });
+    }
+
+    if (!result || !result.threat) {
+      return res.status(400).json({ message: "invalid response from ipdata api" });
+    }
 
     if (result.threat.is_proxy !== true) {
       let existingIp = await ipModel.findOne({ ip: userIP });
