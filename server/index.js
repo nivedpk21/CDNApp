@@ -40,7 +40,7 @@ app.get("/get-ip", async (req, res) => {
       return res.status(500).json({ message: "error fetching ip data from api" });
     }
 
-    if (!result || !result.threat) {
+    if (!result.threat) {
       return res.status(400).json({ message: "invalid response from ipdata api" });
     }
 
